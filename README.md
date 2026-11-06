@@ -1,5 +1,5 @@
 
-此分支只作兼容Typecho 1.3
+此分支只作更好的兼容Typecho 1.3
 
 # Typecho-Butterfly
 ![master version](https://img.shields.io/github/v/release/wehaox/Typecho-Butterfly?sort=semver)
