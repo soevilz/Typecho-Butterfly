@@ -1,3 +1,6 @@
+
+此分支只作兼容Typecho 1.3
+
 # Typecho-Butterfly
 ![master version](https://img.shields.io/github/v/release/wehaox/Typecho-Butterfly?sort=semver)
 ![typecho version](https://img.shields.io/badge/Tyepcho-1.2.0-green)
