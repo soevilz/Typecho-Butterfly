@@ -16,6 +16,7 @@ if (isset($_POST['pwd'])){
 if($this->options->Defend === 'on' && (
     empty($_COOKIE["ThemePassword"]) || $_COOKIE["ThemePassword"] !== hash('sha256', (string)$this->options->ThemePassword)
 )){
+$currentRequestUri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
 ?>
 
 <html data-theme="light">
@@ -76,7 +77,7 @@ const passwordApp = {
                          message: res.data.info,
                          type: 'success',
                          });
-                     window.location = "<?php echo htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8');?>"    
+                     window.location = "<?php echo htmlspecialchars($currentRequestUri, ENT_QUOTES, 'UTF-8');?>"    
                }else{
                      this.$notify({
                          title: '打咩',

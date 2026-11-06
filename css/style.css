@@ -397,6 +397,18 @@
   content: none;
 }
 
+/* style.css 始终加载；深色模式下覆盖 index.css 的蓝色页脚底色。 */
+html[data-theme="dark"] #footer {
+  background: #000 !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-theme="dark"] #footer:before {
+  content: none !important;
+}
+
 #web_bg:before {
   position: absolute !important;
 }

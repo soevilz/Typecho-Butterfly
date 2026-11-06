@@ -67,6 +67,28 @@ $showToc = ($isSingleSidebar && !$disableToc) ? getThemeFieldValue($this->cid, '
     </div>
      <?php endif; ?>
     <div class="sticky_layout">
+
+
+    <?php if (!empty($sidebarBlocks) && in_array('ShowCategory', $sidebarBlocks)): ?>
+        <div class="card-widget card-categories">
+        <div class="item-headline"><i class="fas fa-folder-open"></i><span><?php _e('分类'); ?></span>
+            </div>
+             <ul class="card-category-list" id="aside-cat-list"> 
+        <?php $this->widget('Widget_Metas_Category_List')->parse('
+         <li class="card-category-list-item">
+         <a href="{permalink}" class="card-category-list-link" title="{description}"> 
+         <span class="card-category-list-name">{name}</span>
+          <span class="card-category-list-count"> {count} </span>
+          </a>
+          </li> '); ?>
+             </ul>
+        </div>
+    <?php endif; ?>
+
+
+
+
+        
 <!--微博热搜-->
     <?php if ($isSingleSidebar && $showToc !== 'off'): ?>
     <div class="card-widget" id="card-toc">
@@ -148,21 +170,9 @@ $showToc = ($isSingleSidebar && !$disableToc) ? getThemeFieldValue($this->cid, '
         </div>
     </div>
     <?php endif; ?>
-    <?php if (!empty($sidebarBlocks) && in_array('ShowCategory', $sidebarBlocks)): ?>
-        <div class="card-widget card-categories">
-        <div class="item-headline"><i class="fas fa-folder-open"></i><span><?php _e('分类'); ?></span>
-            </div>
-             <ul class="card-category-list" id="aside-cat-list"> 
-        <?php $this->widget('Widget_Metas_Category_List')->parse('
-         <li class="card-category-list-item">
-         <a href="{permalink}" class="card-category-list-link" title="{description}"> 
-         <span class="card-category-list-name">{name}</span>
-          <span class="card-category-list-count"> {count} </span>
-          </a>
-          </li> '); ?>
-             </ul>
-        </div>
-    <?php endif; ?>
+
+
+
     <!-- 标签 -->
  <?php if (!empty($sidebarBlocks) && in_array('ShowTag', $sidebarBlocks)): ?>
     <div class="card-widget card-tags">

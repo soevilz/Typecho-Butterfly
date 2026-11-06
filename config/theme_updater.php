@@ -610,7 +610,9 @@ function butterflyThemeUpdaterReleaseLock($lockHandle)
 {
     $lockPath = butterflyThemeUpdaterLockPath();
 
-    if (is_resource($lockHandle)) {
+    // PHP 8+ 中 fopen() 返回 FopenStream 对象而非 resource，is_resource() 返回 false
+    // 需要同时检查资源类型和对象类型，确保锁能正确释放
+    if (is_resource($lockHandle) || (is_object($lockHandle) && method_exists($lockHandle, 'getContents'))) {
         @flock($lockHandle, LOCK_UN);
         @fclose($lockHandle);
     }

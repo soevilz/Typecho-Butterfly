@@ -2011,21 +2011,6 @@ function theAllViews()
     echo $site['totalViews'];
 }
 //  回复可见       
-Typecho_Plugin::factory('Widget_Abstract_Contents')->excerptEx = array('myyodux', 'one');
-Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('myyodux', 'one');
-class myyodux
-{
-    public static function one($con, $obj, $text)
-    {
-        $text = empty($text) ? $con : $text;
-        if (!$obj->is('single')) {
-            $text = preg_replace("/\[hide\](.*?)\[\/hide\]/sm", '', $text);
-            //   $text = preg_replace("/\n\s*){3,}/sm",' ',$text);
-        }
-        return $text;
-    }
-}
-
 /**
  * 显示上一篇
  *
@@ -2311,12 +2296,13 @@ function RecapOutPut($login)
 
 function comments_filter($comment)
 {
-    if (isset($_REQUEST['text']) != null) {
-        if ($_POST['g-recaptcha-response'] == null) {
+    if (isset($_REQUEST['text'])) {
+        if (empty($_POST['g-recaptcha-response'])) {
             throw new Typecho_Widget_Exception(_t('人机验证失败,确认你加载了谷歌人机验证并通过验证'));
         } else {
             $siteKey = Helper::options()->siteKey;
             $secretKey = Helper::options()->secretKey;
+            if (!function_exists('getCaptcha')) {
             function getCaptcha($recaptcha_response, $secretKey)
             {
                 $postData = http_build_query([
@@ -2334,19 +2320,23 @@ function comments_filter($comment)
                 $response = json_decode($response);
                 return $response;
             }
+            }
             $resp = getCaptcha($_POST['g-recaptcha-response'], $secretKey);
 
-            if ($resp->success == true) {
-                return $comments;
+            if (is_object($resp) && !empty($resp->success)) {
+                return $comment;
             } else {
-                switch ($resp->error - codes) {
-                    case '{[0] => "timeout-or-duplicate"}':
+                $errorCodes = is_object($resp) && isset($resp->{'error-codes'}) && is_array($resp->{'error-codes'})
+                    ? (string) ($resp->{'error-codes'}[0] ?? '')
+                    : '';
+                switch ($errorCodes) {
+                    case 'timeout-or-duplicate':
                         throw new Typecho_Widget_Exception(_t('验证时间超过2分钟或连续重复发言！'));
                         break;
-                    case '{[0] => "invalid-input-secret"}':
+                    case 'invalid-input-secret':
                         throw new Typecho_Widget_Exception(_t('博主填了无效的siteKey或者secretKey...'));
                         break;
-                    case '{[0] => "bad-request"}':
+                    case 'bad-request':
                         throw new Typecho_Widget_Exception(_t('请求错误！请检查网络'));
                         break;
                     default:
@@ -2361,8 +2351,8 @@ function comments_filter($comment)
 
 function hcaptcha_filter($comment)
 {
-    if (isset($_REQUEST['text']) != null) {
-        if ($_POST['h-captcha-response'] == null) {
+    if (isset($_REQUEST['text'])) {
+        if (empty($_POST['h-captcha-response'])) {
             throw new Typecho_Widget_Exception(_t('人机验证失败,确认你加载了hcaptcha人机验证并通过验证'));
         } else {
             if (isset($_POST['h-captcha-response']) && !empty($_POST['h-captcha-response'])) {
@@ -2370,7 +2360,7 @@ function hcaptcha_filter($comment)
                 $postData = http_build_query([
                     'secret' => $secret,
                     'response' => $_POST['h-captcha-response'],
-                    'remoteip' => $_SERVER['REMOTE_ADDR']
+                    'remoteip' => isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : ''
                 ]);
                 $context = stream_context_create([
                     'http' => [
@@ -2380,18 +2370,21 @@ function hcaptcha_filter($comment)
                     ]
                 ]);
                 $verifyResponse = file_get_contents('https://hcaptcha.com/siteverify', false, $context);
-                $responseData = json_decode($verifyResponse);
-                if ($responseData->success === true || $responseData->success === 1) {
-                    return $comments;
+                $responseData = is_string($verifyResponse) ? json_decode($verifyResponse) : null;
+                if (is_object($responseData) && !empty($responseData->success)) {
+                    return $comment;
                 } else {
-                    switch ($responseData->error - codes) {
-                        case '{[0] => "timeout-or-duplicate"}':
+                    $errorCodes = is_object($responseData) && isset($responseData->{'error-codes'}) && is_array($responseData->{'error-codes'})
+                        ? (string) ($responseData->{'error-codes'}[0] ?? '')
+                        : '';
+                    switch ($errorCodes) {
+                        case 'timeout-or-duplicate':
                             throw new Typecho_Widget_Exception(_t('验证时间超过2分钟或连续重复发言！'));
                             break;
-                        case '{[0] => "invalid-input-secret"}':
+                        case 'invalid-input-secret':
                             throw new Typecho_Widget_Exception(_t('网站管理员填了无效的siteKey或者secretKey...'));
                             break;
-                        case '{[0] => "bad-request"}':
+                        case 'bad-request':
                             throw new Typecho_Widget_Exception(_t('请求错误！请检查网络'));
                             break;
                         default:
@@ -2405,25 +2398,25 @@ function hcaptcha_filter($comment)
 }
 
 function turnstile_filter($comment){
-    if (isset($_REQUEST['text']) != null) {
-        if ($_POST['cf-turnstile-response'] == null) {
+    if (isset($_REQUEST['text'])) {
+        if (empty($_POST['cf-turnstile-response'])) {
             throw new Typecho_Widget_Exception(_t('人机验证失败,确认你加载了Cloudflare Turnstile人机验证并通过验证'));
         } else {
             if (isset($_POST['cf-turnstile-response']) && !empty($_POST['cf-turnstile-response'])) {
                 $secret = Helper::options()->turnstileKey;
                 $cfResponse = $_POST['cf-turnstile-response'];
-                $ip = $_SERVER['REMOTE_ADDR'];
+                $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
                 $header = array(
                     "Content-Type: application/x-www-form-urlencoded"
                 );
                 $params = array('secret' => $secret, 'response' => $cfResponse, 'remoteip' => $ip);
                 $verifyResponse = restFull('https://challenges.cloudflare.com/turnstile/v0/siteverify',$params, 'POST', $header);
-                $responseData = json_decode($verifyResponse,true);
-                $isSuccess = $responseData['success'];
+                $responseData = is_string($verifyResponse) ? json_decode($verifyResponse, true) : array();
+                $isSuccess = !empty($responseData['success']);
                 if ($isSuccess) {
                     return $comment;
                 } else {
-                    $errorCodes = $responseData['error-codes'][0];
+                    $errorCodes = isset($responseData['error-codes'][0]) ? (string) $responseData['error-codes'][0] : '';
                     switch ($errorCodes) {
                         case 'timeout-or-duplicate':
                             throw new Typecho_Widget_Exception(_t('验证超时或连续重复发言,请刷新重新评论'));
@@ -3056,7 +3049,7 @@ function getCachedPostContent($archive) {
     }
     
     // 处理内容
-    $content = replaceHideContent($archive->content, $isLoggedIn || $hasCommented);
+    $content = getThemeRenderedContent($archive, $isLoggedIn || $hasCommented);
     
     // 缓存处理后的内容
     setCache($cache_key, $content);
@@ -3064,6 +3057,14 @@ function getCachedPostContent($archive) {
 }
 
 // 处理文章内容的辅助函数
+function getThemeRenderedContent($archive, $canViewHidden = false) {
+    $content = (string) $archive->content;
+    $content = createCatalog($content);
+    $content = ParseCode($content);
+
+    return replaceHideContent($content, (bool) $canViewHidden);
+}
+
 function processPostContent($archive) {
     $cid = $archive->cid;
     
@@ -3085,7 +3086,7 @@ function processPostContent($archive) {
     }
     
     // 根据用户状态处理隐藏内容
-    $content = replaceHideContent($archive->content, $isLoggedIn || $hasCommented);
+    $content = getThemeRenderedContent($archive, $isLoggedIn || $hasCommented);
     
     return $content;
 }
@@ -3107,9 +3108,26 @@ class ThemeCacheHooks
         return clearCacheOnComment($comment);
     }
 
-    public static function handleCommentMark($comment, $edit, $status)
+    public static function handleCommentMark(...$args)
     {
-        return clearCacheOnComment($comment);
+        if (isset($args[0]) && (is_object($args[0]) || is_array($args[0]))) {
+            return clearCacheOnComment($args[0]);
+        }
+
+        // Typecho 1.3 的 mark 钩子传入状态、评论 ID 和编辑组件。
+        $commentId = isset($args[1]) && is_numeric($args[1]) ? (int) $args[1] : 0;
+        $commentId = isset($args[1]) && is_numeric($args[1]) ? (int) $args[1] : 0;
+        if ($commentId > 0) {
+            $db = Typecho_Db::get();
+            $comment = $db->fetchRow(
+                $db->select('cid', 'mail')->from('table.comments')->where('coid = ?', $commentId)->limit(1)
+            );
+            if ($comment) {
+                return clearCacheOnComment($comment);
+            }
+        }
+
+        return null;
     }
 }
 

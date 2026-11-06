@@ -16,7 +16,7 @@
             $result = $db->fetchRow($sql);
             $hasCommented = !empty($result);
         }
-         $content = replaceHideContent($this->content, $this->user->hasLogin() || $hasCommented);
+         $content = getThemeRenderedContent($this, $this->user->hasLogin() || $hasCommented);
         echo $content;
        ?>
     </article>

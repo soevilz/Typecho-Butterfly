@@ -13,7 +13,7 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /** 文章置顶 */
 $sticky = $this->options->sticky_cids;
-if($sticky && $this->is('index') || $this->is('front')){
+if ($sticky && ($this->is('index') || $this->is('front'))) {
     $sticky_cids = explode(',', strtr($sticky, ' ', ','));//分割文本 
     $sticky_html = "<span class='article-meta'><i class='fas fa-thumbtack article-meta__icon sticky'></i><span class='sticky'>置顶 </span><span class='article-meta__separator'>|</span></span>";
     $db = Typecho_Db::get();
@@ -30,13 +30,14 @@ if($sticky && $this->is('index') || $this->is('front')){
         $select2->where('table.contents.cid != ?', $cid);
     }
     if ($order) $select1->order('',"(case cid$order end)");
-    if ($this->_currentPage == 1) foreach($db->fetchAll($select1) as $sticky_post){
+    $currentPage = $this->getCurrentPage();
+    if ($currentPage === 1) foreach($db->fetchAll($select1) as $sticky_post){
         $sticky_post['sticky'] = $sticky_html;
         $this->push($sticky_post);
     }
     $uid = $this->user->uid; //登录时，显示用户各自的私密文章
     if($uid) $select2->orWhere('authorId = ? AND status = ?',$uid,'private');
-    $sticky_posts = $db->fetchAll($select2->order('table.contents.created', Typecho_Db::SORT_DESC)->page($this->_currentPage, $this->parameter->pageSize));
+    $sticky_posts = $db->fetchAll($select2->order('table.contents.created', Typecho_Db::SORT_DESC)->page($currentPage, $this->parameter->pageSize));
     foreach($sticky_posts as $sticky_post) $this->push($sticky_post); //压入列队
     $this->setTotal($this->getTotal()-count($sticky_cids)); //置顶文章不计算在所有文章内
 }

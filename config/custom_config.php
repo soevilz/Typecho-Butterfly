@@ -1208,10 +1208,6 @@ function themeInit($archive)
     if (Helper::options()->EnablePjax == "on") {
         Helper::options()->commentsAntiSpam = false;
     }
-    if ($archive->is('single')) {
-        $archive->content = createCatalog($archive->content);
-        $archive->content = ParseCode($archive->content);
-    }
     $loginStatus = $archive->widget('Widget_User')->hasLogin();
     if (!empty(Helper::options()->siteKey) && !empty(Helper::options()->secretKey) && !$loginStatus) {
         comments_filter($archive);

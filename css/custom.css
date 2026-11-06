@@ -1770,6 +1770,15 @@ div.snote.danger:before,div.snote.error:before {
 	background: hsla(0,0%,100%,.15)
 }
 
+/* 深色模式下不要叠加半透明白色，保证页脚为纯黑。 */
+[data-theme=dark] #footer,
+[data-theme=dark] #footer:before {
+	background: #000 !important;
+	background-image: none !important;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none
+}
+
 #footer #footer-wrap,#footer #footer-wrap a {
 	color: var(--font-color);
 }
